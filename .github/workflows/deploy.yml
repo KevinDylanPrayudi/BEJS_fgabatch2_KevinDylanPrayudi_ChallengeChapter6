@@ -22,9 +22,9 @@ jobs:
 
       - name: Deploy
         run: railway up --json --service testing
-        
+
       - name: Setup database
-        run: railway run testing npx prisma generate
+        run: railway run --service testing npx prisma generate
 
       - name: URL
         id: url
