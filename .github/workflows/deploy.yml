@@ -24,7 +24,7 @@ jobs:
         run: railway up --json --service testing
 
       - name: Setup database
-        run: railway run --service testing npx prisma generate
+        run: railway run --service testing npx prisma migrate dev --name init
 
       - name: URL
         id: url
