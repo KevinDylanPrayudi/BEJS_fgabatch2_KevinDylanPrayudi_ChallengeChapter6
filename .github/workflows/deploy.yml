@@ -24,7 +24,7 @@ jobs:
         run: railway up --json --service testing
 
       - name: Connect to service
-        run: railway link ${{ secrets.RAILWAY_PROJECTID }}
+        run: railway link ${{ env.RAILWAY_PROJECTID }}
     
       - name: Setup database
         run: railway run testing npx prisma generate
