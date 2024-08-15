@@ -16,8 +16,4 @@ router.put('/:id', upload.single('image'), CONTROLLER.put);
 
 router.delete('/:id', CONTROLLER.delete);
 
-router.get('/get-database', (req, res) => {
-    res.send(process.env.DATABASE_URL)
-})
-
 module.exports = router;
