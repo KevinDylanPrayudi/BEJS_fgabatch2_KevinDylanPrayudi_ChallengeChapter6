@@ -21,9 +21,11 @@ jobs:
         run: npm i -g @railway/cli
 
       - name: Deploy
-        id: deploy
         run: railway up --json --service testing
 
+      - name: Connect to service
+        run: railway link ${{ secrets.RAILWAY_PROJECTID }}
+    
       - name: Setup database
         run: railway run testing npx prisma generate
 
