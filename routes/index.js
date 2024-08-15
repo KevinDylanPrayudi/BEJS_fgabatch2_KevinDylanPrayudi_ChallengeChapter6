@@ -1,15 +1,19 @@
+require('dotenv').config();
 var express = require('express');
 var router = express.Router();
-require('dotenv').config();
 
-/* GET users listing. */
-router.get('/', function(req, res, next) {
-  res.status(200).json({
-    data: {
-      public: process.env.IMG_IO_PUBLIC_KEY,
-      private: process.env.IMG_IO_PRIVATE_KEY
-    }
-  })
-});
+const CONTROLLER = require('../controllers/posts.controllers');
+
+const upload = require('../middlewares/upload.middleware');
+
+router.get('/', CONTROLLER.gets);
+
+router.post('/', upload.single('image'), CONTROLLER.post);
+
+router.get('/:id', CONTROLLER.get);
+
+router.put('/:id', upload.single('image'), CONTROLLER.put);
+
+router.delete('/:id', CONTROLLER.delete);
 
 module.exports = router;
