@@ -6,10 +6,11 @@ function gets() {
     return result;
 }
 
-function get(id) {
+function get({id, userId}) {
     const result = db.post.findUnique({
         where: {
-            id: Number(id)
+            id: Number(id),
+            userId: Number(userId)
         }
     });
 
@@ -29,10 +30,11 @@ function post(data) {
     return result;
 }
 
-function put(id, data) {
+function put({ id, userId }, data) {
     const result = db.post.update({
         where: {
-            id: Number(id)
+            id: Number(id),
+            userId: Number(userId)
         },
         data
     });
@@ -40,10 +42,11 @@ function put(id, data) {
     return result;
 }
 
-function _delete(id) {
+function _delete({ id, userId }) {
     const result = db.post.delete({
         where: {
-            id: Number(id)
+            id: Number(id),
+            userId: Number(userId)
         }
     });
 

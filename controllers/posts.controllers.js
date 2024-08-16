@@ -3,29 +3,38 @@ const model = require('../models/posts.model');
 const validator = require('../validators/posts.validator');
 const Joi = require('joi');
 
-async function gets(req, res) {
-    const result = await model.gets();
+async function gets(req, res, next) {
 
+    try {
+        const result = await model.gets();
 
-    const imageKit = new ImageKit({
-        publicKey: process.env.IMG_IO_PUBLIC_KEY,
-        privateKey: process.env.IMG_IO_PRIVATE_KEY,
-        urlEndpoint: process.env.IMG_IO_ENDPOINT
-    });
+        if (result.length > 0) {
+            const imageKit = new ImageKit({
+                publicKey: process.env.IMG_IO_PUBLIC_KEY,
+                privateKey: process.env.IMG_IO_PRIVATE_KEY,
+                urlEndpoint: process.env.IMG_IO_ENDPOINT
+            });
 
-    for (let i = 0; i < result.length; i++) {
-        const filename = await imageKit.getFileDetails(result[i].image);
-        const url = await imageKit.url({
-            src: process.env.IMG_IO_ENDPOINT + filename.name
-        });
-        result[i].image = url;
+            for (let i = 0; i < result.length; i++) {
+                const filename = await imageKit.getFileDetails(result[i].image);
+                const url = await imageKit.url({
+                    src: process.env.IMG_IO_ENDPOINT + filename.name
+                });
+                result[i].image = url;
+            }
+
+        }
+
+        res.status(200).json({
+            status: 'success',
+            message: 'Success get posts',
+            data: result
+        })
+
+    } catch (error) {
+        next(error);
     }
 
-    res.status(200).json({
-        status: 'success',
-        message: 'Success get posts',
-        data: result
-    })
 }
 
 async function get(req, res, next) {
@@ -37,13 +46,18 @@ async function get(req, res, next) {
             urlEndpoint: process.env.IMG_IO_ENDPOINT
         });
 
-        const result = await model.get(req.params.id);
-
-        const filename = await imageKit.getFileDetails(result.image);
-
-        result.image = await imageKit.url({
-            src: process.env.IMG_IO_ENDPOINT + filename.name
+        const result = await model.get({
+            id: req.params.id,
+            userId: req.user
         });
+
+        if (result?.image) {
+            const filename = await imageKit.getFileDetails(result.image);
+
+            result.image = await imageKit.url({
+                src: process.env.IMG_IO_ENDPOINT + filename.name
+            });
+        }
 
         res.status(200).json({
             status: 'success',
@@ -63,7 +77,6 @@ async function post(req, res, next) {
     });
 
     try {
-
         await validator.validateAsync({
             title: req.body.title,
             content: req.body.content,
@@ -79,7 +92,8 @@ async function post(req, res, next) {
         const result = await model.post({
             title: req.body.title,
             content: req.body.content,
-            image: image.fileId
+            image: image.fileId,
+            userId: req.user
         });
 
         res.status(200).json({
@@ -105,7 +119,18 @@ async function put(req, res, next) {
     try {
         Joi.attempt(req.params.id, Joi.number().integer().required(), message = 'Invalid id');
 
-        let result = await model.get(req.params.id);
+        let result = await model.get({
+            id: req.params.id,
+            userId: req.user
+        });
+
+        if (!result) {
+            return res.status(404).json({
+                status: 'fail',
+                message: 'Data not found'
+            });
+        }
+
         if (req.file) {
             const imageKit = new ImageKit({
                 publicKey: process.env.IMG_IO_PUBLIC_KEY,
@@ -121,7 +146,10 @@ async function put(req, res, next) {
                 fileName: Date.now() + Math.round(Math.random() * 1E9) + '-' + req.file.originalname,
             });
 
-            result = await model.put(req.params.id, {
+            result = await model.put({
+                id: req.params.id,
+                userId: req.user
+            }, {
                 title: req.body.title,
                 content: req.body.content,
                 image: image.fileId
@@ -129,7 +157,10 @@ async function put(req, res, next) {
 
             url = image.url;
         } else {
-            result = await model.put(req.params.id, {
+            result = await model.put({
+                id: req.params.id,
+                userId: req.user
+            }, {
                 title: req.body.title,
                 content: req.body.content
             });
@@ -145,6 +176,8 @@ async function put(req, res, next) {
                 url
             }
         });
+
+
     } catch (error) {
         next(error)
     }
@@ -153,15 +186,25 @@ async function put(req, res, next) {
 async function _delete(req, res, next) {
     try {
         Joi.attempt(req.params.id, Joi.number().integer().required(), message = 'Invalid id');
-        let result = await model.get(req.params.id);
-        const imageKit = new ImageKit({
-            publicKey: process.env.IMG_IO_PUBLIC_KEY,
-            privateKey: process.env.IMG_IO_PRIVATE_KEY,
-            urlEndpoint: process.env.IMG_IO_ENDPOINT
+
+        let result = await model.get({
+            id: req.params.id,
+            userId: req.user
         });
 
-        await imageKit.deleteFile(result.image);
-        await model.delete(req.params.id);
+        if (result) {
+            const imageKit = new ImageKit({
+                publicKey: process.env.IMG_IO_PUBLIC_KEY,
+                privateKey: process.env.IMG_IO_PRIVATE_KEY,
+                urlEndpoint: process.env.IMG_IO_ENDPOINT
+            });
+
+            await imageKit.deleteFile(result.image);
+            await model.delete({
+                id: req.params.id,
+                userId: req.user
+            });
+        }
         res.status(200).end();
     } catch (error) {
         next(error)

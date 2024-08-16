@@ -1,0 +1,431 @@
+openapi: '3.0.0'
+info:
+  title: Swagger Petstore - OpenAPI 3.0
+  description: |
+    This is a sample API Documentation
+  version: 1.0.11
+servers:
+  - url: http://localhost:3000
+tags:
+  - name: Auth
+    description: Everything about your Auth
+  - name: Post
+    description: Everything about your Post
+  - name: Users
+    description: Everything about yourselves
+paths:
+  /{id}:
+    put:
+      tags:
+        - Post
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      summary: Update an existing post
+      description: Update an existing post
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                content:
+                  type: string
+                image:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        default: 1
+                      title:
+                        type: string
+                      url:
+                        type: string
+                      name:
+                        type: string
+                      content:
+                        type: string
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+                        
+    get:
+      tags:
+        - Post
+      operationId: PostId
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      summary: get data of post
+      responses:
+        '200':
+          description: Successful operation
+          content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    status:
+                      type: string
+                    message:
+                      type: string
+                    data:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          default: 1
+                        title:
+                          type: string
+                        url:
+                          type: string
+                        name:
+                          type: string
+                        content:
+                          type: string
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+    
+    delete:
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+        - Post
+      summary: if you wanna delete your post
+      responses:
+        '200':
+          description: nothing return in this endpoint
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+
+  /:
+    post:
+      tags:
+        - Post
+      summary: Add a new post
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                content:
+                  type: string
+                image:
+                  type: string
+                  format: binary
+              required:
+                - title
+                - content
+                - image
+      
+      
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        default: 1
+                      title:
+                        type: string
+                      url:
+                        type: string
+                      name:
+                        type: string
+                      content:
+                        type: string
+          links:
+            PostId:
+              operationId: PostId
+              parameters:
+                id: $response.body#/data/id
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+  
+    get:
+      tags:
+        - Post
+      summary: get data of posts
+      responses:
+        '200':
+          description: Successful operation
+          content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    status:
+                      type: string
+                    message:
+                      type: string
+                    data:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            default: 1
+                          title:
+                            type: string
+                          url:
+                            type: string
+                          name:
+                            type: string
+                          content:
+                            type: string
+    
+  /auth:
+    post:
+      tags:
+        - Auth
+      summary: you have to login before doing some operation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: dylan
+                password:
+                  type: string
+                  example: dylan
+      responses:
+        '200':
+          description: this is example result of login
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+        
+    delete:
+      tags:
+        - Auth
+      summary: if you wanna logout just hit this endpoint
+      responses:
+        '200':
+          description: nothing return in this endpoint
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+                
+  /users:
+    get:
+      tags:
+        - Users
+      summary: get data of users
+      responses:
+        '200':
+          description: Successful operation
+          content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    status:
+                      type: string
+                    message:
+                      type: string
+                    data:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            default: 1
+                          username:
+                            type: string
+                          password:
+                            type: string
+                            
+    post:
+      tags:
+        - Users
+      summary: post data yours
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: dylan
+                password:
+                  type: string
+                  example: dylan
+      responses:
+        '200':
+          description: this is example result of login
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 1
+                  username:
+                    type: string
+                  password:
+                    type: string
+  
+    put:
+      tags:
+        - Users
+      summary: get data yours
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: dylan
+                password:
+                  type: string
+                  example: dylan
+      responses:
+        '200':
+          description: this is example result of login
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 1
+                  username:
+                    type: string
+                  password:
+                    type: string
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+    
+    delete:
+      tags:
+        - Users
+      summary: if you wanna delete your account u can hit this endpoint
+      responses:
+        '200':
+          description: nothing return in this endpoint
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+  
+  /users/me:
+    get:
+      tags:
+        - Users
+      summary: get data about yourself
+      responses:
+        '200':
+          description: Successful operation
+          content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    status:
+                      type: string
+                    message:
+                      type: string
+                    data:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          default: 1
+                        username:
+                          type: string
+                        password:
+                          type: string
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+components:
+  schemas:
+    Unauthorized:
+      type: object
+      properties:
+        status:
+          type: string
+          example: fail
+        message:
+          type: string
+          example: unauthorized
+        
+        
+      
+    
