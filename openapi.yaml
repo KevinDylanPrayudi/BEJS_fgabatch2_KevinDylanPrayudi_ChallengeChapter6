@@ -5,7 +5,7 @@ info:
     This is a sample API Documentation
   version: 1.0.11
 servers:
-  - url: http://localhost:3000
+  - url: https://testing-production-3694.up.railway.app/
 tags:
   - name: Auth
     description: Everything about your Auth
