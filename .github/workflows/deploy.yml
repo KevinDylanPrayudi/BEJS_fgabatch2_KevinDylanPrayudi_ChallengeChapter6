@@ -36,4 +36,4 @@ jobs:
           } >> $GITHUB_OUTPUT
 
       - name: Print URL
-        run: echo '[link to service](https://${{ fromJson(steps.url.outputs.JSON_RESULT).RAILWAY_PUBLIC_DOMAIN }})' >> $GITHUB_STEP_SUMMARY
+        run: echo '[link to service](https://${{ fromJson(steps.url.outputs.JSON_RESULT).RAILWAY_PUBLIC_DOMAIN }}/api-docs)' >> $GITHUB_STEP_SUMMARY
