@@ -40,7 +40,7 @@ jobs:
       
       - name: Update README.md
         run: |
-          sed -i '5s/.*/[link to service](https://${{ fromJson(steps.url.outputs.JSON_RESULT).RAILWAY_PUBLIC_DOMAIN }}/api-docs)/' README.md
+          sed -i '5s/.*/[link to service](https://'${{ fromJson(steps.url.outputs.JSON_RESULT).RAILWAY_PUBLIC_DOMAIN }}'/api-docs)/' README.md
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config user.name "github-actions[bot]"
           git commit -am "Automated report"
