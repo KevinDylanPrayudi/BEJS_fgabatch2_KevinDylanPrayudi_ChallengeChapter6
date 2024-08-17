@@ -1,29 +1,13 @@
-const ImageKit = require('imagekit');
 const model = require('../models/posts.model');
-const validator = require('../validators/posts.validator');
 const Joi = require('joi');
+
+const validator = require('../validators/posts.validator');
+const imagekit = require('../lib/imagekit');
 
 async function gets(req, res, next) {
 
     try {
         const result = await model.gets();
-
-        if (result.length > 0) {
-            const imageKit = new ImageKit({
-                publicKey: process.env.IMG_IO_PUBLIC_KEY,
-                privateKey: process.env.IMG_IO_PRIVATE_KEY,
-                urlEndpoint: process.env.IMG_IO_ENDPOINT
-            });
-
-            for (let i = 0; i < result.length; i++) {
-                const filename = await imageKit.getFileDetails(result[i].image);
-                const url = await imageKit.url({
-                    src: process.env.IMG_IO_ENDPOINT + filename.name
-                });
-                result[i].image = url;
-            }
-
-        }
 
         res.status(200).json({
             status: 'success',
@@ -40,24 +24,11 @@ async function gets(req, res, next) {
 async function get(req, res, next) {
     try {
         Joi.attempt(req.params.id, Joi.number().integer().required(), message = 'Invalid id');
-        const imageKit = new ImageKit({
-            publicKey: process.env.IMG_IO_PUBLIC_KEY,
-            privateKey: process.env.IMG_IO_PRIVATE_KEY,
-            urlEndpoint: process.env.IMG_IO_ENDPOINT
-        });
 
         const result = await model.get({
             id: req.params.id,
             userId: req.user
         });
-
-        if (result?.image) {
-            const filename = await imageKit.getFileDetails(result.image);
-
-            result.image = await imageKit.url({
-                src: process.env.IMG_IO_ENDPOINT + filename.name
-            });
-        }
 
         res.status(200).json({
             status: 'success',
@@ -70,11 +41,6 @@ async function get(req, res, next) {
 }
 
 async function post(req, res, next) {
-    const imageKit = new ImageKit({
-        publicKey: process.env.IMG_IO_PUBLIC_KEY,
-        privateKey: process.env.IMG_IO_PRIVATE_KEY,
-        urlEndpoint: process.env.IMG_IO_ENDPOINT
-    });
 
     try {
         await validator.validateAsync({
@@ -83,7 +49,7 @@ async function post(req, res, next) {
             image: req.file
         });
 
-        const image = await imageKit.upload({
+        const image = await imagekit.upload({
             useUniqueFileName: false,
             file: Buffer.from(req.file.buffer).toString('base64'),
             fileName: Date.now() + Math.round(Math.random() * 1E9) + '-' + req.file.originalname,
@@ -92,7 +58,8 @@ async function post(req, res, next) {
         const result = await model.post({
             title: req.body.title,
             content: req.body.content,
-            image: image.fileId,
+            imageid: image.fileId,
+            imageurl: image.url,
             userId: req.user
         });
 
@@ -114,7 +81,7 @@ async function post(req, res, next) {
 }
 
 async function put(req, res, next) {
-    let url;
+    let imageurl;
 
     try {
         Joi.attempt(req.params.id, Joi.number().integer().required(), message = 'Invalid id');
@@ -132,15 +99,20 @@ async function put(req, res, next) {
         }
 
         if (req.file) {
-            const imageKit = new ImageKit({
-                publicKey: process.env.IMG_IO_PUBLIC_KEY,
-                privateKey: process.env.IMG_IO_PRIVATE_KEY,
-                urlEndpoint: process.env.IMG_IO_ENDPOINT
+
+            imagekit.deleteFile(result.imageid, (error, result) => {
+                if (error) {
+                    console.log(error);
+                }
             });
 
-            await imageKit.deleteFile(result.image);
+            imagekit.purgeCache(result.imageurl, (error, result) => {
+                if (error) {
+                    console.log(error);
+                }
+            })
 
-            const image = await imageKit.upload({
+            const image = await imagekit.upload({
                 useUniqueFileName: false,
                 file: Buffer.from(req.file.buffer).toString('base64'),
                 fileName: Date.now() + Math.round(Math.random() * 1E9) + '-' + req.file.originalname,
@@ -152,10 +124,11 @@ async function put(req, res, next) {
             }, {
                 title: req.body.title,
                 content: req.body.content,
-                image: image.fileId
+                imageid: image.fileId,
+                imageurl: image.url
             });
 
-            url = image.url;
+            imageurl = image.url;
         } else {
             result = await model.put({
                 id: req.params.id,
@@ -173,7 +146,7 @@ async function put(req, res, next) {
                 id: result.id,
                 title: result.title,
                 content: result.content,
-                url
+                imageurl
             }
         });
 
@@ -193,18 +166,25 @@ async function _delete(req, res, next) {
         });
 
         if (result) {
-            const imageKit = new ImageKit({
-                publicKey: process.env.IMG_IO_PUBLIC_KEY,
-                privateKey: process.env.IMG_IO_PRIVATE_KEY,
-                urlEndpoint: process.env.IMG_IO_ENDPOINT
+
+            imagekit.deleteFile(result.imageid, (error, result) => {
+                if (error) {
+                    console.log(error);
+                }
             });
 
-            await imageKit.deleteFile(result.image);
+            imagekit.purgeCache(result.imageurl, (error, result) => {
+                if (error) {
+                    console.log(error);
+                }
+            });
+
             await model.delete({
                 id: req.params.id,
                 userId: req.user
             });
         }
+
         res.status(200).end();
     } catch (error) {
         next(error)
