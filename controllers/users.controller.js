@@ -1,5 +1,4 @@
 const Joi = require('joi');
-const bcrypt = require('bcrypt');
 
 const model = require('../models/users.model');
 const validator = require('../validators/user.validator');
@@ -34,8 +33,6 @@ async function post(req, res, next) {
     try {
         await validator.validateAsync(req.body);
 
-        req.body.password = await bcrypt.hash(req.body.password, 10);
-
         const result = await model.post(req.body);
 
         res.status(200).json({
@@ -51,10 +48,6 @@ async function post(req, res, next) {
 
 async function put(req, res, next) {
     try {
-
-        if (req.body.password) {
-            req.body.password = await bcrypt.hash(req.body.password, 10);
-        }
 
         const result = await model.put(req.user, req.body);
 
